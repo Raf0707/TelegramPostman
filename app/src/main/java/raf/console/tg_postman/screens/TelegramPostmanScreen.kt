@@ -29,10 +29,15 @@ import raf.console.tg_postman.data.TelegramSettings
 import raf.console.tg_postman.service.TelegramBotService
 import android.net.Uri
 import android.provider.ContactsContract
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.ui.viewinterop.AndroidView
@@ -44,6 +49,7 @@ import raf.console.tg_postman.data.ContactData
 import androidx.media3.common.MediaItem
 import raf.console.tg_postman.screens.activity.GeoPickerActivity
 import raf.console.tg_postman.screens.activity.MapPickerActivity
+import raf.console.tg_postman.utils.compressVideoStandard
 
 
 enum class SendMode {
@@ -57,7 +63,7 @@ enum class DurationSubMode {
 enum class TelegramMessageType(val label: String) {
     TEXT("Текст"),
     PHOTO("Фото"),
-    DOCUMENT("Файл"),
+    DOCUMENT("Документ"),
     VIDEO("Видео"),
     AUDIO("Аудио"),
     CONTACT("Контакт"),
@@ -115,6 +121,12 @@ fun TelegramPostmanScreen() {
 
     var selectedContact by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) } // name to phone
 
+    val selectedImages = remember { mutableStateListOf<Uri>() }
+    val selectedVideos = remember { mutableStateListOf<Uri>() }
+    val selectedDocs = remember { mutableStateListOf<Uri>() }
+    val selectedAudios = remember { mutableStateListOf<Uri>() }
+    val multiContacts = remember { mutableStateListOf<Pair<String, String>>() }
+
 
     val contactPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickContact()
@@ -149,6 +161,47 @@ fun TelegramPostmanScreen() {
         }
     }
 
+    val multiMediaUris = remember { mutableStateListOf<String>() }
+
+    // ==== Фото ====
+    /*val multiImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        selectedImages.clear()
+        selectedImages.addAll(uris)
+    }*/
+    val multiImagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        multiMediaUris.clear()
+        multiMediaUris.addAll(uris.map { it.toString() })
+    }
+
+// ==== Видео ====
+    val multiVideoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        selectedVideos.clear()
+        selectedVideos.addAll(uris)
+    }
+
+// ==== Документы ====
+    val multiDocPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        selectedDocs.clear()
+        selectedDocs.addAll(uris)
+    }
+
+// ==== Аудио ====
+    val multiAudioPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        selectedAudios.clear()
+        selectedAudios.addAll(uris)
+    }
+
+
     val contactsPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -158,6 +211,35 @@ fun TelegramPostmanScreen() {
             Toast.makeText(context, "Разрешение на чтение контактов не предоставлено", Toast.LENGTH_SHORT).show()
         }
     }
+
+    val multiContactPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickContact()
+    ) { contactUri ->
+        contactUri?.let {
+            val cursor = context.contentResolver.query(
+                it,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                ),
+                null,
+                null,
+                null
+            )
+            cursor?.use { c ->
+                val nameIndex = c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                val numberIndex = c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                if (c.moveToFirst()) {
+                    val name = c.getString(nameIndex) ?: "Без имени"
+                    val phone = c.getString(numberIndex) ?: ""
+                    // Добавляем в список (мультивыбор)
+                    multiContacts.add(name to phone)
+                }
+            }
+        }
+    }
+
+
 
     var selectedMapProvider by rememberSaveable { mutableStateOf(MapProvider.YANDEX) }
 
@@ -172,6 +254,15 @@ fun TelegramPostmanScreen() {
             }
         }
     }
+
+    val multiDocumentPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        selectedDocs.clear()
+        selectedDocs.addAll(uris)
+    }
+
+
 
     fun saveAll() {
         coroutineScope.launch {
@@ -505,134 +596,290 @@ fun TelegramPostmanScreen() {
             TelegramMessageType.PHOTO -> {
                 Text("Фото", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Button(onClick = { imagePickerLauncher.launch("image/*") }) {
-                        Text("Выбрать изображение")
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Button(onClick = { imagePickerLauncher.launch("image/*") }) {
+                            Text("Выбрать изображение")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        if (mediaUri != null) {
+                            TextButton(onClick = { mediaUri = null }) {
+                                Text("Удалить")
+                            }
+                        }
                     }
-                    Spacer(Modifier.width(16.dp))
-                    if (mediaUri != null) {
-                        TextButton(onClick = { mediaUri = null }) {
-                            Text("Удалить")
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedButton(onClick = { multiImagePickerLauncher.launch("image/*") }) {
+                            Text("Выбрать несколько")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        if (multiMediaUris.isNotEmpty()) {
+                            TextButton(onClick = { multiMediaUris.clear() }) {
+                                Text("Удалить все")
+                            }
+                        }
+                    }
+
+                    // Превью выбранных изображений
+                    if (multiMediaUris.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        LazyRow {
+                            items(multiMediaUris) { uri ->
+                                AsyncImage(
+                                    model = uri,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .padding(4.dp)
+                                )
+                            }
                         }
                     }
                 }
 
-                mediaUri?.let { uri ->
-                    Spacer(Modifier.height(8.dp))
-                    AsyncImage(
-                        model = uri,
-                        contentDescription = "Выбранное изображение",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                    )
-                }
             }
 
             TelegramMessageType.VIDEO -> {
                 Text("Видео", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Button(onClick = { imagePickerLauncher.launch("video/*") }) {
-                        Text("Выбрать видео")
-                    }
-                    Spacer(Modifier.width(16.dp))
-                    if (mediaUri != null) {
-                        TextButton(onClick = { mediaUri = null }) {
-                            Text("Удалить")
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Button(onClick = { imagePickerLauncher.launch("video/*") }) {
+                            Text("Выбрать видео")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        if (mediaUri != null) {
+                            TextButton(onClick = { mediaUri = null }) {
+                                Text("Удалить")
+                            }
                         }
                     }
-                }
 
-                mediaUri?.let { uri ->
-                    Spacer(Modifier.height(16.dp))
-                    val fileName = uri.toString().substringAfterLast('/')
-                    Text("Выбрано: $fileName")
+                    Spacer(Modifier.height(8.dp))
 
-                    Spacer(Modifier.height(16.dp))
-
-                    AndroidView(
-                        factory = { ctx ->
-                            PlayerView(ctx).apply {
-                                player = ExoPlayer.Builder(ctx).build().also {
-                                    it.setMediaItem(MediaItem.fromUri(uri))
-                                    it.prepare()
-                                    it.playWhenReady = false
-                                }
+                    // Выбор нескольких аудиофайлов
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedButton(onClick = { Toast.makeText(context, "Отправьте несколько видео как документы! Telegram API ограничивает скорость и объем потоковой загрузки", Toast.LENGTH_SHORT).show() }) {
+                            Text("Выбрать несколько")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        if (selectedAudios.isNotEmpty()) {
+                            TextButton(onClick = { selectedAudios.clear() }) {
+                                Text("Удалить все")
                             }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                    )
+                        }
+                    }
 
+//                    Row(verticalAlignment = Alignment.CenterVertically) {
+//                        OutlinedButton(onClick = { multiVideoPickerLauncher.launch(("video/*")) }) {
+//                            Text("Выбрать несколько")
+//                        }
+//                        Spacer(Modifier.width(16.dp))
+//                        if (selectedVideos.isNotEmpty()) {
+//                            TextButton(onClick = { selectedVideos.clear() }) {
+//                                Text("Удалить все")
+//                            }
+//                        }
+//                    }
+//
+//                    if (selectedVideos.isNotEmpty()) {
+//                        Spacer(Modifier.height(8.dp))
+//                        LazyRow {
+//                            items(selectedVideos) { uri ->
+//                                AndroidView(
+//                                    factory = { ctx ->
+//                                        PlayerView(ctx).apply {
+//                                            player = ExoPlayer.Builder(ctx).build().also {
+//                                                it.setMediaItem(MediaItem.fromUri(Uri.parse(uri.toString())))
+//                                                it.prepare()
+//                                                it.playWhenReady = false
+//                                            }
+//                                        }
+//                                    },
+//                                    modifier = Modifier
+//                                        .width(120.dp)
+//                                        .height(100.dp)
+//                                        .padding(4.dp)
+//                                )
+//                            }
+//                        }
+//                    }
                 }
-
             }
+
 
 
             TelegramMessageType.DOCUMENT -> {
-                Text("Файл", style = MaterialTheme.typography.titleMedium)
-                Button(onClick = { imagePickerLauncher.launch("*/*") }) {
-                    Text("Выбрать файл")
-                }
-                mediaUri?.let { uri ->
-                    val fileName = uri.substringAfterLast('/')
+                Text("Документ", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Info, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Файл: $fileName")
+                        Button(onClick = { imagePickerLauncher.launch("*/*") }) {
+                            Text("Выбрать файл")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        if (mediaUri != null) {
+                            TextButton(onClick = { mediaUri = null }) {
+                                Text("Удалить")
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedButton(onClick = { multiDocumentPickerLauncher.launch(arrayOf("*/*")) }) {
+                            Text("Выбрать несколько")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        if (selectedDocs.isNotEmpty()) {
+                            TextButton(onClick = { selectedDocs.clear() }) {
+                                Text("Удалить все")
+                            }
+                        }
+                    }
+
+                    if (selectedDocs.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Column(
+                            modifier = Modifier
+                                .heightIn(max = 200.dp) // ограничиваем высоту, чтобы не было бесконечной
+                                .verticalScroll(rememberScrollState())
+                                .fillMaxWidth()
+                                .padding(4.dp)
+                                .border(1.dp, Color.Gray)
+                        ) {
+                            selectedDocs.forEach { uri: Uri ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                        .border(1.dp, Color.LightGray)
+                                        .padding(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Info, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(uri.toString().substringAfterLast('/'))
+                                }
+                                Spacer(Modifier.height(4.dp))
+                            }
+                        }
+                    }
+
+                }
+            }
+
+
+            TelegramMessageType.AUDIO -> {
+                Text("Аудио", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(8.dp))
+                Column {
+                    // Выбор одного аудиофайла
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Button(onClick = { imagePickerLauncher.launch("audio/*") }) {
+                            Text("Выбрать аудио")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        if (mediaUri != null) {
+                            TextButton(onClick = { mediaUri = null }) {
+                                Text("Удалить")
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    // Выбор нескольких аудиофайлов
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedButton(onClick = { Toast.makeText(context, "Отправьте несколько аудиофайлов как документы", Toast.LENGTH_SHORT).show() }) {
+                            Text("Выбрать несколько")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        if (selectedAudios.isNotEmpty()) {
+                            TextButton(onClick = { selectedAudios.clear() }) {
+                                Text("Удалить все")
+                            }
+                        }
+                    }
+
+                    // Отображение выбранных аудиофайлов
+                    if (selectedAudios.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        LazyColumn {
+                            items(selectedAudios) { uri ->
+                                val fileName = Uri.parse(uri.toString()).lastPathSegment ?: "Аудио"
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Info, contentDescription = null)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(fileName)
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            TelegramMessageType.AUDIO -> {
-                Text("Аудио", style = MaterialTheme.typography.titleMedium)
-                Button(onClick = { imagePickerLauncher.launch("audio/*") }) {
-                    Text("Выбрать аудио")
-                }
-                mediaUri?.let { uri ->
-                    val fileName = uri.substringAfterLast('/')
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Info, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Аудио: $fileName")
-                    }
-                }
-            }
+
 
             TelegramMessageType.CONTACT -> {
                 Text("Контакт", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(8.dp))
+                Column {
+                    // Выбор одного контакта
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Button(onClick = {
+                            when (PackageManager.PERMISSION_GRANTED) {
+                                ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) -> {
+                                    contactPickerLauncher.launch(null)
+                                }
+                                else -> contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                            }
+                        }) {
+                            Text("Выбрать контакт")
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        if (selectedContact != null) {
+                            TextButton(onClick = { selectedContact = null }) {
+                                Text("Удалить")
+                            }
+                        }
+                    }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Button(onClick = {
+                    Spacer(Modifier.height(8.dp))
+
+                    // Мультивыбор (накопительный)
+                    /*OutlinedButton(onClick = {
                         when (PackageManager.PERMISSION_GRANTED) {
                             ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) -> {
-                                contactPickerLauncher.launch(null)
+                                contactPickerLauncher.launch(null) // повторный вызов → добавляем в multiContacts
                             }
-                            else -> {
-                                contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
-                            }
+                            else -> contactsPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
                         }
                     }) {
-                        Text("Выбрать контакт")
+                        Text("Выбрать несколько")
                     }
 
-                    Spacer(Modifier.width(16.dp))
-                    if (selectedContact != null) {
-                        TextButton(onClick = { selectedContact = null }) {
-                            Text("Удалить")
+                    // Отображение выбранных контактов
+                    if (multiContacts.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        LazyColumn {
+                            items(multiContacts) { (name, phone) ->
+                                Text("$name ($phone)")
+                            }
                         }
-                    }
+                        Spacer(Modifier.height(4.dp))
+                        TextButton(onClick = { multiContacts.clear() }) {
+                            Text("Удалить всех")
+                        }
+                    }*/
                 }
-
-                selectedContact?.let { (name, phone) ->
-                    Spacer(Modifier.height(8.dp))
-                    Text("Выбран контакт: $name ($phone)")
-                } ?: Text("Контакт не выбран")
             }
+
+
+
 
 
             /*TelegramMessageType.LOCATION -> {
@@ -782,15 +1029,73 @@ fun TelegramPostmanScreen() {
                             for (chatId in ids) {
                                 val ok = when (messageType) {
                                     TelegramMessageType.TEXT -> botService.sendMessage(token, chatId, message)
-                                    TelegramMessageType.PHOTO -> botService.sendPhoto(context, token, chatId, Uri.parse(mediaUri), message)
-                                    TelegramMessageType.DOCUMENT -> botService.sendDocument(context, token, chatId, Uri.parse(mediaUri), message)
-                                    TelegramMessageType.VIDEO -> botService.sendVideo(context, token, chatId, Uri.parse(mediaUri), message)
-                                    TelegramMessageType.AUDIO -> botService.sendAudio(context, token, chatId, Uri.parse(mediaUri), message)
-                                    TelegramMessageType.CONTACT -> {
-                                        selectedContact?.let { (name, phone) ->
-                                            botService.sendContact(token, chatId, phone, name)
-                                        } ?: false
+                                    TelegramMessageType.PHOTO -> {
+                                        if (multiMediaUris.isNotEmpty()) {
+                                            val uris = multiMediaUris.map { Uri.parse(it) }
+                                            botService.sendMediaGroup(context, token, chatId, uris, "photo", message)
+                                        } else {
+                                            botService.sendPhoto(context, token, chatId, Uri.parse(mediaUri), message)
+                                        }
                                     }
+                                    TelegramMessageType.DOCUMENT -> {
+                                        if (selectedDocs.isNotEmpty()) {
+                                            botService.sendMediaGroup(context, token, chatId, selectedDocs, "document", message)
+                                        } else if (mediaUri != null) {
+                                            botService.sendDocument(context, token, chatId, Uri.parse(mediaUri), message)
+                                        } else {
+                                            failed.add(chatId)
+                                        }
+                                    }
+                                    TelegramMessageType.VIDEO -> {
+                                        if (selectedVideos.isNotEmpty()) {
+                                            // ✅ Перед отправкой сжимаем большие видео
+                                            val compressedUris = selectedVideos.map { uri ->
+                                                val size = context.contentResolver.openFileDescriptor(uri, "r")?.statSize ?: 0L
+                                                if (size > 45 * 1024 * 1024) { // Если видео больше 45 MB → сжимаем
+                                                    compressVideoStandard(context, uri) ?: uri
+                                                } else uri
+                                            }
+
+                                            botService.sendMediaGroup(context, token, chatId, compressedUris, "video", message)
+                                        } else if (mediaUri != null) {
+                                            val originalUri = Uri.parse(mediaUri)
+                                            val size = context.contentResolver.openFileDescriptor(originalUri, "r")?.statSize ?: 0L
+
+                                            // ✅ Сжимаем одиночное большое видео
+                                            val finalUri = if (size > 45 * 1024 * 1024) {
+                                                compressVideoStandard(context, originalUri) ?: originalUri
+                                            } else originalUri
+
+                                            botService.sendVideo(context, token, chatId, finalUri, message)
+                                        } else {
+                                            failed.add(chatId)
+                                        }
+                                    }
+                                    TelegramMessageType.AUDIO -> {
+                                        if (selectedAudios.isNotEmpty()) {
+                                            botService.sendMediaGroup(context, token, chatId, selectedAudios, "audio", message)
+                                        } else if (mediaUri != null) {
+                                            botService.sendAudio(context, token, chatId, Uri.parse(mediaUri), message)
+                                        } else {
+                                            failed.add(chatId)
+                                        }
+                                    }
+                                    TelegramMessageType.CONTACT -> {
+                                        if (multiContacts.isNotEmpty()) {
+                                            coroutineScope.launch {
+                                                val ok = botService.sendContactsBatch(token, chatId, multiContacts)
+                                                if (!ok) failed.add(chatId)
+                                            }
+                                        } else if (selectedContact != null) {
+                                            coroutineScope.launch {
+                                                val ok = botService.sendContact(token, chatId, selectedContact!!.second, selectedContact!!.first)
+                                                if (!ok) failed.add(chatId)
+                                            }
+                                        } else {
+                                            failed.add(chatId)
+                                        }
+                                    }
+
 
                                     TelegramMessageType.LOCATION -> {
                                         geoPoint.value?.let { (lat, lon) ->
@@ -799,7 +1104,7 @@ fun TelegramPostmanScreen() {
                                     }
                                 }
 
-                                if (!ok) failed.add(chatId)
+                                //if (!ok) failed.add(chatId)
                             }
                         }
 
@@ -809,15 +1114,74 @@ fun TelegramPostmanScreen() {
                                 for (chatId in ids) {
                                     val ok = when (messageType) {
                                         TelegramMessageType.TEXT -> botService.sendMessage(token, chatId, message)
-                                        TelegramMessageType.PHOTO -> botService.sendPhoto(context, token, chatId, Uri.parse(mediaUri), message)
-                                        TelegramMessageType.DOCUMENT -> botService.sendDocument(context, token, chatId, Uri.parse(mediaUri), message)
-                                        TelegramMessageType.VIDEO -> botService.sendVideo(context, token, chatId, Uri.parse(mediaUri), message)
-                                        TelegramMessageType.AUDIO -> botService.sendAudio(context, token, chatId, Uri.parse(mediaUri), message)
-                                        TelegramMessageType.CONTACT -> {
-                                            selectedContact?.let { (name, phone) ->
-                                                botService.sendContact(token, chatId, phone, name)
-                                            } ?: false
+                                        TelegramMessageType.PHOTO -> {
+                                            if (multiMediaUris.isNotEmpty()) {
+                                                val uris = multiMediaUris.map { Uri.parse(it) }
+                                                botService.sendMediaGroup(context, token, chatId, uris, "photo", message)
+                                            } else {
+                                                botService.sendPhoto(context, token, chatId, Uri.parse(mediaUri), message)
+                                            }
                                         }
+                                        TelegramMessageType.DOCUMENT -> {
+                                            if (selectedDocs.isNotEmpty()) {
+                                                botService.sendMediaGroup(context, token, chatId, selectedDocs, "document", message)
+                                            } else if (mediaUri != null) {
+                                                botService.sendDocument(context, token, chatId, Uri.parse(mediaUri), message)
+                                            } else {
+                                                failed.add(chatId)
+                                            }
+                                        }
+                                        TelegramMessageType.VIDEO -> {
+                                            if (selectedVideos.isNotEmpty()) {
+                                                // ✅ Перед отправкой сжимаем большие видео
+                                                val compressedUris = selectedVideos.map { uri ->
+                                                    val size = context.contentResolver.openFileDescriptor(uri, "r")?.statSize ?: 0L
+                                                    if (size > 45 * 1024 * 1024) { // Если видео больше 45 MB → сжимаем
+                                                        compressVideoStandard(context, uri) ?: uri
+                                                    } else uri
+                                                }
+
+                                                botService.sendMediaGroup(context, token, chatId, compressedUris, "video", message)
+                                            } else if (mediaUri != null) {
+                                                val originalUri = Uri.parse(mediaUri)
+                                                val size = context.contentResolver.openFileDescriptor(originalUri, "r")?.statSize ?: 0L
+
+                                                // ✅ Сжимаем одиночное большое видео
+                                                val finalUri = if (size > 45 * 1024 * 1024) {
+                                                    compressVideoStandard(context, originalUri) ?: originalUri
+                                                } else originalUri
+
+                                                botService.sendVideo(context, token, chatId, finalUri, message)
+                                            } else {
+                                                failed.add(chatId)
+                                            }
+                                        }
+
+                                        TelegramMessageType.AUDIO -> {
+                                            if (selectedAudios.isNotEmpty()) {
+                                                botService.sendMediaGroup(context, token, chatId, selectedAudios, "audio", message)
+                                            } else if (mediaUri != null) {
+                                                botService.sendAudio(context, token, chatId, Uri.parse(mediaUri), message)
+                                            } else {
+                                                failed.add(chatId)
+                                            }
+                                        }
+                                        TelegramMessageType.CONTACT -> {
+                                            if (multiContacts.isNotEmpty()) {
+                                                coroutineScope.launch {
+                                                    val ok = botService.sendContactsBatch(token, chatId, multiContacts)
+                                                    if (!ok) failed.add(chatId)
+                                                }
+                                            } else if (selectedContact != null) {
+                                                coroutineScope.launch {
+                                                    val ok = botService.sendContact(token, chatId, selectedContact!!.second, selectedContact!!.first)
+                                                    if (!ok) failed.add(chatId)
+                                                }
+                                            } else {
+                                                failed.add(chatId)
+                                            }
+                                        }
+
 
                                         TelegramMessageType.LOCATION -> {
                                             geoPoint.value?.let { (lat, lon) ->
@@ -825,7 +1189,7 @@ fun TelegramPostmanScreen() {
                                             } ?: false
                                         }
                                     }
-                                    if (!ok) failed.add(chatId)
+                                    //if (!ok) failed.add(chatId)
                                 }
                                 delay(intervalSeconds.toLong() * 1000)
                             }
@@ -842,15 +1206,73 @@ fun TelegramPostmanScreen() {
                                         for (chatId in ids) {
                                             val ok = when (messageType) {
                                                 TelegramMessageType.TEXT -> botService.sendMessage(token, chatId, message)
-                                                TelegramMessageType.PHOTO -> botService.sendPhoto(context, token, chatId, Uri.parse(mediaUri), message)
-                                                TelegramMessageType.DOCUMENT -> botService.sendDocument(context, token, chatId, Uri.parse(mediaUri), message)
-                                                TelegramMessageType.VIDEO -> botService.sendVideo(context, token, chatId, Uri.parse(mediaUri), message)
-                                                TelegramMessageType.AUDIO -> botService.sendAudio(context, token, chatId, Uri.parse(mediaUri), message)
-                                                TelegramMessageType.CONTACT -> {
-                                                    selectedContact?.let { (name, phone) ->
-                                                        botService.sendContact(token, chatId, phone, name)
-                                                    } ?: false
+                                                TelegramMessageType.PHOTO -> {
+                                                    if (multiMediaUris.isNotEmpty()) {
+                                                        val uris = multiMediaUris.map { Uri.parse(it) }
+                                                        botService.sendMediaGroup(context, token, chatId, uris, "photo", message)
+                                                    } else {
+                                                        botService.sendPhoto(context, token, chatId, Uri.parse(mediaUri), message)
+                                                    }
                                                 }
+                                                TelegramMessageType.DOCUMENT -> {
+                                                    if (selectedDocs.isNotEmpty()) {
+                                                        botService.sendMediaGroup(context, token, chatId, selectedDocs, "document", message)
+                                                    } else if (mediaUri != null) {
+                                                        botService.sendDocument(context, token, chatId, Uri.parse(mediaUri), message)
+                                                    } else {
+                                                        failed.add(chatId)
+                                                    }
+                                                }
+                                                TelegramMessageType.VIDEO -> {
+                                                    if (selectedVideos.isNotEmpty()) {
+                                                        // ✅ Перед отправкой сжимаем большие видео
+                                                        val compressedUris = selectedVideos.map { uri ->
+                                                            val size = context.contentResolver.openFileDescriptor(uri, "r")?.statSize ?: 0L
+                                                            if (size > 45 * 1024 * 1024) { // Если видео больше 45 MB → сжимаем
+                                                                compressVideoStandard(context, uri) ?: uri
+                                                            } else uri
+                                                        }
+
+                                                        botService.sendMediaGroup(context, token, chatId, compressedUris, "video", message)
+                                                    } else if (mediaUri != null) {
+                                                        val originalUri = Uri.parse(mediaUri)
+                                                        val size = context.contentResolver.openFileDescriptor(originalUri, "r")?.statSize ?: 0L
+
+                                                        // ✅ Сжимаем одиночное большое видео
+                                                        val finalUri = if (size > 45 * 1024 * 1024) {
+                                                            compressVideoStandard(context, originalUri) ?: originalUri
+                                                        } else originalUri
+
+                                                        botService.sendVideo(context, token, chatId, finalUri, message)
+                                                    } else {
+                                                        failed.add(chatId)
+                                                    }
+                                                }
+                                                TelegramMessageType.AUDIO -> {
+                                                    if (selectedAudios.isNotEmpty()) {
+                                                        botService.sendMediaGroup(context, token, chatId, selectedAudios, "audio", message)
+                                                    } else if (mediaUri != null) {
+                                                        botService.sendAudio(context, token, chatId, Uri.parse(mediaUri), message)
+                                                    } else {
+                                                        failed.add(chatId)
+                                                    }
+                                                }
+                                                TelegramMessageType.CONTACT -> {
+                                                    if (multiContacts.isNotEmpty()) {
+                                                        coroutineScope.launch {
+                                                            val ok = botService.sendContactsBatch(token, chatId, multiContacts)
+                                                            if (!ok) failed.add(chatId)
+                                                        }
+                                                    } else if (selectedContact != null) {
+                                                        coroutineScope.launch {
+                                                            val ok = botService.sendContact(token, chatId, selectedContact!!.second, selectedContact!!.first)
+                                                            if (!ok) failed.add(chatId)
+                                                        }
+                                                    } else {
+                                                        failed.add(chatId)
+                                                    }
+                                                }
+
 
                                                 TelegramMessageType.LOCATION -> {
                                                     geoPoint.value?.let { (lat, lon) ->
@@ -858,7 +1280,7 @@ fun TelegramPostmanScreen() {
                                                     } ?: false
                                                 }
                                             }
-                                            if (!ok) failed.add(chatId)
+                                            //if (!ok) failed.add(chatId)
                                         }
                                         delay(l * 1000L)
                                     }
@@ -871,15 +1293,73 @@ fun TelegramPostmanScreen() {
                                         for (chatId in ids) {
                                             val ok = when (messageType) {
                                                 TelegramMessageType.TEXT -> botService.sendMessage(token, chatId, message)
-                                                TelegramMessageType.PHOTO -> botService.sendPhoto(context, token, chatId, Uri.parse(mediaUri), message)
-                                                TelegramMessageType.DOCUMENT -> botService.sendDocument(context, token, chatId, Uri.parse(mediaUri), message)
-                                                TelegramMessageType.VIDEO -> botService.sendVideo(context, token, chatId, Uri.parse(mediaUri), message)
-                                                TelegramMessageType.AUDIO -> botService.sendAudio(context, token, chatId, Uri.parse(mediaUri), message)
-                                                TelegramMessageType.CONTACT -> {
-                                                    selectedContact?.let { (name, phone) ->
-                                                        botService.sendContact(token, chatId, phone, name)
-                                                    } ?: false
+                                                TelegramMessageType.PHOTO -> {
+                                                    if (multiMediaUris.isNotEmpty()) {
+                                                        val uris = multiMediaUris.map { Uri.parse(it) }
+                                                        botService.sendMediaGroup(context, token, chatId, uris, "photo", message)
+                                                    } else {
+                                                        botService.sendPhoto(context, token, chatId, Uri.parse(mediaUri), message)
+                                                    }
                                                 }
+                                                TelegramMessageType.DOCUMENT -> {
+                                                    if (selectedDocs.isNotEmpty()) {
+                                                        botService.sendMediaGroup(context, token, chatId, selectedDocs, "document", message)
+                                                    } else if (mediaUri != null) {
+                                                        botService.sendDocument(context, token, chatId, Uri.parse(mediaUri), message)
+                                                    } else {
+                                                        failed.add(chatId)
+                                                    }
+                                                }
+                                                TelegramMessageType.VIDEO -> {
+                                                    if (selectedVideos.isNotEmpty()) {
+                                                        // ✅ Перед отправкой сжимаем большие видео
+                                                        val compressedUris = selectedVideos.map { uri ->
+                                                            val size = context.contentResolver.openFileDescriptor(uri, "r")?.statSize ?: 0L
+                                                            if (size > 45 * 1024 * 1024) { // Если видео больше 45 MB → сжимаем
+                                                                compressVideoStandard(context, uri) ?: uri
+                                                            } else uri
+                                                        }
+
+                                                        botService.sendMediaGroup(context, token, chatId, compressedUris, "video", message)
+                                                    } else if (mediaUri != null) {
+                                                        val originalUri = Uri.parse(mediaUri)
+                                                        val size = context.contentResolver.openFileDescriptor(originalUri, "r")?.statSize ?: 0L
+
+                                                        // ✅ Сжимаем одиночное большое видео
+                                                        val finalUri = if (size > 45 * 1024 * 1024) {
+                                                            compressVideoStandard(context, originalUri) ?: originalUri
+                                                        } else originalUri
+
+                                                        botService.sendVideo(context, token, chatId, finalUri, message)
+                                                    } else {
+                                                        failed.add(chatId)
+                                                    }
+                                                }
+                                                TelegramMessageType.AUDIO -> {
+                                                    if (selectedAudios.isNotEmpty()) {
+                                                        botService.sendMediaGroup(context, token, chatId, selectedAudios, "audio", message)
+                                                    } else if (mediaUri != null) {
+                                                        botService.sendAudio(context, token, chatId, Uri.parse(mediaUri), message)
+                                                    } else {
+                                                        failed.add(chatId)
+                                                    }
+                                                }
+                                                TelegramMessageType.CONTACT -> {
+                                                    if (multiContacts.isNotEmpty()) {
+                                                        coroutineScope.launch {
+                                                            val ok = botService.sendContactsBatch(token, chatId, multiContacts)
+                                                            if (!ok) failed.add(chatId)
+                                                        }
+                                                    } else if (selectedContact != null) {
+                                                        coroutineScope.launch {
+                                                            val ok = botService.sendContact(token, chatId, selectedContact!!.second, selectedContact!!.first)
+                                                            if (!ok) failed.add(chatId)
+                                                        }
+                                                    } else {
+                                                        failed.add(chatId)
+                                                    }
+                                                }
+
 
                                                 TelegramMessageType.LOCATION -> {
                                                     geoPoint.value?.let { (lat, lon) ->
@@ -887,7 +1367,7 @@ fun TelegramPostmanScreen() {
                                                     } ?: false
                                                 }
                                             }
-                                            if (!ok) failed.add(chatId)
+                                            //if (!ok) failed.add(chatId)
                                         }
                                         delay(x * 1000L)
                                     }
