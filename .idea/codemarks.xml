@@ -3,7 +3,7 @@
   <component name="CodeMarkSettings">
     <option name="lastScanState">
       <map>
-        <entry key="$PROJECT_DIR$/.git/COMMIT_EDITMSG" value="1753746121309" />
+        <entry key="$PROJECT_DIR$/.git/COMMIT_EDITMSG" value="1753831496538" />
         <entry key="$PROJECT_DIR$/.git/HEAD" value="1753330168812" />
         <entry key="$PROJECT_DIR$/.git/config" value="1753330178216" />
         <entry key="$PROJECT_DIR$/.git/description" value="1753330168792" />
@@ -21,11 +21,11 @@
         <entry key="$PROJECT_DIR$/.git/hooks/push-to-checkout.sample" value="1753330168809" />
         <entry key="$PROJECT_DIR$/.git/hooks/update.sample" value="1753330168809" />
         <entry key="$PROJECT_DIR$/.git/info/exclude" value="1753330168811" />
-        <entry key="$PROJECT_DIR$/.git/logs/HEAD" value="1753746121321" />
-        <entry key="$PROJECT_DIR$/.git/logs/refs/heads/master" value="1753746121321" />
-        <entry key="$PROJECT_DIR$/.git/logs/refs/remotes/origin/master" value="1753746129615" />
-        <entry key="$PROJECT_DIR$/.git/refs/heads/master" value="1753746121320" />
-        <entry key="$PROJECT_DIR$/.git/refs/remotes/origin/master" value="1753746129614" />
+        <entry key="$PROJECT_DIR$/.git/logs/HEAD" value="1753831496547" />
+        <entry key="$PROJECT_DIR$/.git/logs/refs/heads/master" value="1753831496547" />
+        <entry key="$PROJECT_DIR$/.git/logs/refs/remotes/origin/master" value="1753831505087" />
+        <entry key="$PROJECT_DIR$/.git/refs/heads/master" value="1753831496547" />
+        <entry key="$PROJECT_DIR$/.git/refs/remotes/origin/master" value="1753831505085" />
         <entry key="$PROJECT_DIR$/.gitignore" value="1753312540529" />
         <entry key="$PROJECT_DIR$/.gradle/8.13/checksums/checksums.lock" value="1753312550168" />
         <entry key="$PROJECT_DIR$/.gradle/8.13/fileHashes/fileHashes.lock" value="1753312549242" />
@@ -39,7 +39,7 @@
         <entry key="$PROJECT_DIR$/.idea/.name" value="1753312544856" />
         <entry key="$PROJECT_DIR$/.idea/AndroidProjectSystem.xml" value="1753312544937" />
         <entry key="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" value="1753730340036" />
-        <entry key="$PROJECT_DIR$/.idea/codemarks.xml" value="1753831446692" />
+        <entry key="$PROJECT_DIR$/.idea/codemarks.xml" value="1753832085123" />
         <entry key="$PROJECT_DIR$/.idea/compiler.xml" value="1753312767627" />
         <entry key="$PROJECT_DIR$/.idea/deploymentTargetSelector.xml" value="1753312810366" />
         <entry key="$PROJECT_DIR$/.idea/dictionaries/project.xml" value="1753337564873" />
@@ -49,7 +49,7 @@
         <entry key="$PROJECT_DIR$/.idea/misc.xml" value="1753820343943" />
         <entry key="$PROJECT_DIR$/.idea/runConfigurations.xml" value="1753312544997" />
         <entry key="$PROJECT_DIR$/.idea/vcs.xml" value="1753330170166" />
-        <entry key="$PROJECT_DIR$/.idea/workspace.xml" value="1753831382201" />
+        <entry key="$PROJECT_DIR$/.idea/workspace.xml" value="1753831999985" />
         <entry key="$PROJECT_DIR$/.kotlin/errors/errors-1753820891403.log" value="1753820906182" />
         <entry key="$PROJECT_DIR$/.kotlin/sessions/kotlin-compiler-1118137246671214100.salive" value="1753739750991" />
         <entry key="$PROJECT_DIR$/.kotlin/sessions/kotlin-compiler-11892896476508714613.salive" value="1753738887209" />
@@ -68,7 +68,7 @@
         <entry key="$PROJECT_DIR$/app/.gitignore" value="1753312540856" />
         <entry key="$PROJECT_DIR$/app/build.gradle.kts" value="1753342580874" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json" value="1753736704748" />
-        <entry key="$PROJECT_DIR$/app/build/intermediates/apk/debug/output-metadata.json" value="1753827241478" />
+        <entry key="$PROJECT_DIR$/app/build/intermediates/apk/debug/output-metadata.json" value="1753831980324" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/apk_ide_redirect_file/debug/createDebugApkListingFileRedirect/redirect.txt" value="1753736902810" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/app_metadata/debug/writeDebugAppMetadata/app-metadata.properties" value="1753736704842" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/compatible_screen_manifest/debug/createDebugCompatibleScreenManifests/output-metadata.json" value="1753736704539" />
@@ -189,7 +189,7 @@
         <entry key="$PROJECT_DIR$/app/build/intermediates/incremental/mergeDebugAssets/merger.xml" value="1753736704775" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml" value="1753736704803" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/incremental/mergeDebugShaders/merger.xml" value="1753736704768" />
-        <entry key="$PROJECT_DIR$/app/build/intermediates/incremental/packageDebug/tmp/debug/dex-renamer-state.txt" value="1753827241462" />
+        <entry key="$PROJECT_DIR$/app/build/intermediates/incremental/packageDebug/tmp/debug/dex-renamer-state.txt" value="1753831980309" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/linked_resources_binary_format/debug/processDebugResources/output-metadata.json" value="1753749409617" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt" value="1753736704623" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/manifest_merge_blame_file/debug/processDebugMainManifest/manifest-merger-blame-debug-report.txt" value="1753749408421" />
@@ -322,7 +322,7 @@
         <entry key="$PROJECT_DIR$/app/build/intermediates/source_set_path_map/debug/mapDebugSourceSetPaths/file-map.txt" value="1753736702981" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/stable_resource_ids_file/debug/processDebugResources/stableIds.txt" value="1753749409332" />
         <entry key="$PROJECT_DIR$/app/build/intermediates/symbol_list_with_package_name/debug/processDebugResources/package-aware-r.txt" value="1753749409616" />
-        <entry key="$PROJECT_DIR$/app/build/kotlin/compileDebugKotlin/cacheable/caches-jvm/lookups/counters.tab" value="1753827240545" />
+        <entry key="$PROJECT_DIR$/app/build/kotlin/compileDebugKotlin/cacheable/caches-jvm/lookups/counters.tab" value="1753831980158" />
         <entry key="$PROJECT_DIR$/app/build/kotlin/compileDebugKotlin/cacheable/dirty-sources.txt" value="1753750358701" />
         <entry key="$PROJECT_DIR$/app/build/outputs/logs/manifest-merger-debug-report.txt" value="1753749408419" />
         <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/ComposableSingletons$MainActivityKt$lambda-1$1.class" value="1753750510964" />
@@ -736,10 +736,11 @@
         <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramBotService$sendMultipartFile$2.class" value="1753750511042" />
         <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramBotService$sendPhoto$2.class" value="1753750511041" />
         <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramBotService.class" value="1753750511040" />
-        <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramForegroundService$WhenMappings.class" value="1753825047749" />
-        <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramForegroundService$onStartCommand$1.class" value="1753825047748" />
-        <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramForegroundService$sendMessagesOnce$1.class" value="1753825047748" />
-        <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramForegroundService.class" value="1753825047747" />
+        <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramForegroundService$WhenMappings.class" value="1753831980108" />
+        <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramForegroundService$onStartCommand$1$WhenMappings.class" value="1753831980107" />
+        <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramForegroundService$onStartCommand$1.class" value="1753831980107" />
+        <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramForegroundService$sendMessagesOnce$1.class" value="1753831980108" />
+        <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/service/TelegramForegroundService.class" value="1753831980106" />
         <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/ui/theme/ColorKt.class" value="1753750511046" />
         <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/ui/theme/ThemeKt.class" value="1753750511046" />
         <entry key="$PROJECT_DIR$/app/build/tmp/kotlin-classes/debug/raf/console/tg_postman/ui/theme/TypeKt.class" value="1753750511046" />
@@ -761,7 +762,7 @@
         <entry key="$PROJECT_DIR$/app/src/main/java/raf/console/tg_postman/screens/TelegramPostmanScreen.kt" value="1753827239129" />
         <entry key="$PROJECT_DIR$/app/src/main/java/raf/console/tg_postman/screens/activity/Geo.kt" value="1753345918511" />
         <entry key="$PROJECT_DIR$/app/src/main/java/raf/console/tg_postman/screens/activity/Map.kt" value="1753342748586" />
-        <entry key="$PROJECT_DIR$/app/src/main/java/raf/console/tg_postman/service/ForegroundService.kt" value="1753824995577" />
+        <entry key="$PROJECT_DIR$/app/src/main/java/raf/console/tg_postman/service/ForegroundService.kt" value="1753831975405" />
         <entry key="$PROJECT_DIR$/app/src/main/java/raf/console/tg_postman/service/Service.kt" value="1753738282664" />
         <entry key="$PROJECT_DIR$/app/src/main/java/raf/console/tg_postman/ui/theme/Color.kt" value="1753312542020" />
         <entry key="$PROJECT_DIR$/app/src/main/java/raf/console/tg_postman/ui/theme/Theme.kt" value="1753312542360" />
@@ -800,16 +801,16 @@
         <entry key="$USER_HOME$/AppData/Local/Google/AndroidStudio2025.1.1/projects/telegrampostman.fbbb188b/external_build_system/project/modules.xml" value="1753312767501" />
         <entry key="$APPLICATION_CONFIG_DIR$/workspace/2qlDuqKjDMeRT13Zu94IORic1NF.xml" value="1753824800823" />
         <entry key="$APPLICATION_CONFIG_DIR$/workspace/2vfskDjQJuMTs1Hlkp32YHI08Sx.xml" value="1753820712864" />
-        <entry key="$APPLICATION_CONFIG_DIR$/workspace/30IQK3VxSKBt3JHgUpUmJMBfvxZ.xml" value="1753831382209" />
+        <entry key="$APPLICATION_CONFIG_DIR$/workspace/30IQK3VxSKBt3JHgUpUmJMBfvxZ.xml" value="1753831999996" />
         <entry key="$USER_HOME$/ComposeProjects/PDFReader/.idea/caches/deviceStreaming.xml" value="1753730340036" />
-        <entry key="$USER_HOME$/ComposeProjects/PDFReader/.idea/codemarks.xml" value="1753831446692" />
+        <entry key="$USER_HOME$/ComposeProjects/PDFReader/.idea/codemarks.xml" value="1753832085128" />
         <entry key="$USER_HOME$/ComposeProjects/PDFReader/.idea/misc.xml" value="1753820347567" />
-        <entry key="$USER_HOME$/ComposeProjects/PDFReader/.idea/workspace.xml" value="1753831396487" />
+        <entry key="$USER_HOME$/ComposeProjects/PDFReader/.idea/workspace.xml" value="1753831999985" />
         <entry key="$USER_HOME$/ComposeProjects/RafBook_GooglePlay/.idea/caches/deviceStreaming.xml" value="1753730340108" />
-        <entry key="$USER_HOME$/ComposeProjects/RafBook_GooglePlay/.idea/codemarks.xml" value="1753831446850" />
+        <entry key="$USER_HOME$/ComposeProjects/RafBook_GooglePlay/.idea/codemarks.xml" value="1753832085251" />
         <entry key="$USER_HOME$/ComposeProjects/RafBook_GooglePlay/.idea/codemarks.xml~" value="1753738023412" />
         <entry key="$USER_HOME$/ComposeProjects/RafBook_GooglePlay/.idea/misc.xml" value="1753820349205" />
-        <entry key="$USER_HOME$/ComposeProjects/RafBook_GooglePlay/.idea/workspace.xml" value="1753831396497" />
+        <entry key="$USER_HOME$/ComposeProjects/RafBook_GooglePlay/.idea/workspace.xml" value="1753832000003" />
       </map>
     </option>
   </component>

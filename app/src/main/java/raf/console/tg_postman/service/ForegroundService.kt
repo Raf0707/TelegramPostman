@@ -90,18 +90,38 @@ class TelegramForegroundService : Service() {
                 }
 
                 SendMode.DURATION.name -> {
-                    val iterations = if (durationSubMode == DurationSubMode.TIMES_PER_SECONDS) durationSendCount
-                    else durationTotalTime / durationFixedInterval
 
-                    repeat(iterations) { attempt ->
-                        sentCount += sendMessagesOnce(
-                            botService, token, chatIds, message, messageType,
-                            multiMediaUris, selectedDocs, selectedVideos, selectedAudios,
-                            mediaUri, latitude, longitude, failed, totalMessages, sentCount
-                        )
-                        if (attempt != iterations - 1 && durationFixedInterval > 0) delay(durationFixedInterval * 1000L)
+                    val totalDurationSec = durationTotalTime
+                    val count = durationSendCount
+                    val interval = (totalDurationSec.toFloat() / count.toFloat()) * 1000L
+
+                    when (durationSubMode) {
+                        DurationSubMode.TIMES_PER_SECONDS -> {
+                            repeat(durationSendCount) { attempt ->
+                                sentCount += sendMessagesOnce(
+                                    botService, token, chatIds, message, messageType,
+                                    multiMediaUris, selectedDocs, selectedVideos, selectedAudios,
+                                    mediaUri, latitude, longitude, failed, totalMessages, sentCount
+                                )
+                                if (attempt != durationSendCount - 1) delay(interval.toLong())
+                            }
+                        }
+                        DurationSubMode.FIXED_INTERVAL -> {
+                            val iterations = durationTotalTime / durationFixedInterval
+                            repeat(iterations) { attempt ->
+                                sentCount += sendMessagesOnce(
+                                    botService, token, chatIds, message, messageType,
+                                    multiMediaUris, selectedDocs, selectedVideos, selectedAudios,
+                                    mediaUri, latitude, longitude, failed, totalMessages, sentCount
+                                )
+                                if (attempt != iterations - 1) delay(durationFixedInterval * 1000L)
+                            }
+                        }
+
+                        else -> {}
                     }
                 }
+
             }
 
             val success = failed.isEmpty()
